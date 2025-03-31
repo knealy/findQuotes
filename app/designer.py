@@ -63,7 +63,10 @@ class QuoteDesigner:
         wrapped_text = textwrap.fill(quote, width=30)
         
         # Create image
-        img_width, img_height = 800, 800  # Make it square for better social media sharing
+        img_width, img_height = 800, 800  # Square image for better social media sharing
+        
+        # Check if split design is enabled
+        split_enabled = background.get('split_enabled', False)
         
         # Handle different background types
         if background['type'] == 'color':
@@ -103,16 +106,17 @@ class QuoteDesigner:
                 # Fallback to white background if image can't be loaded
                 print(f"Error loading background image: {e}")
                 img = Image.new('RGB', (img_width, img_height), color='#ffffff')
+        else:
+            # Default white background
+            img = Image.new('RGB', (img_width, img_height), color='#ffffff')
         
-        elif background['type'] == 'split' and 'split_image' in background:
-            # Handle split design case
+        # If split design is enabled, process the split image
+        if split_enabled and 'split_image' in background:
             try:
-                # Get the split image URL from cloudinary or local path
                 split_image_url = background['split_image']
-                split_position = background.get('position', 'top')
-                quote_bg_color = background.get('quote_background', '#ffffff')
+                split_position = background.get('split_position', 'top')
                 
-                # Create a new split design
+                # Get the split image
                 if split_image_url.startswith('http'):
                     # Download remote image
                     import requests
@@ -128,17 +132,20 @@ class QuoteDesigner:
                     )
                     split_img = Image.open(image_path)
                 
-                # Create the split design
-                return self.create_split_design_with_url(quote, author, split_img, split_position, 
-                                                       quote_bg_color, font_color, font_style, font_size)
+                # Resize the split image to fit half the design height
+                split_height = img_height // 2
+                split_img = split_img.resize((img_width, split_height), Image.LANCZOS)
+                
+                # Place the split image at the top or bottom half
+                if split_position == 'top':
+                    img.paste(split_img, (0, 0))
+                else:  # bottom
+                    img.paste(split_img, (0, split_height))
             except Exception as e:
-                print(f"Error creating split design: {str(e)}")
-                # Fallback to white background
-                img = Image.new('RGB', (img_width, img_height), color='#ffffff')
-        else:
-            # Default white background
-            img = Image.new('RGB', (img_width, img_height), color='#ffffff')
+                print(f"Error processing split image: {str(e)}")
+                # Continue with the base background if split image fails
         
+        # Draw the quote text
         draw = ImageDraw.Draw(img)
         
         # Get font
@@ -180,9 +187,19 @@ class QuoteDesigner:
         author_width = author_bbox[2] - author_bbox[0]
         author_height = author_bbox[3] - author_bbox[1]
         
+        # Adjust text position if split design is enabled
+        if split_enabled:
+            split_position = background.get('split_position', 'top')
+            if split_position == 'top':
+                quote_y = (img_height // 2) + 50  # Text starts below the middle
+            else:
+                quote_y = (img_height // 4)  # Text starts at 1/4 from the top
+        else:
+            # Center the quote if no split design
+            quote_y = (img_height - quote_height - author_height - 20) // 2
+        
         # Center the quote
         quote_x = (img_width - quote_width) // 2
-        quote_y = (img_height - quote_height - author_height - 20) // 2
         
         # Position author below quote
         author_x = (img_width - author_width) // 2
@@ -191,21 +208,6 @@ class QuoteDesigner:
         # Draw the texts
         draw.text((quote_x, quote_y), wrapped_text, font=quote_font, fill=font_color)
         draw.text((author_x, author_y), author_text, font=author_font, fill=font_color)
-        
-        # Handle split design
-        if background['type'] == 'split':
-            split_image_path = background.get('split_image')
-            split_position = background.get('position', 'top')
-            quote_bg_color = background.get('quote_background', '#ffffff')
-            
-            if split_image_path:
-                img = self.create_split_design(quote, author, split_image_path, split_position, quote_bg_color, font_color)
-                
-                # Adjust text position based on split position
-                if split_position == 'top':
-                    quote_y = (img_height // 2) + 20  # Move text to lower half
-                else:
-                    quote_y = 20  # Keep text in upper half
         
         # Save the image
         os.makedirs(os.path.join(current_app.static_folder, 'designs'), exist_ok=True)

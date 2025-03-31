@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>Account</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Username:</strong> {{ user.username }}</p>
+                    <p><strong>Email:</strong> {{ user.email }}</p>
+                    <p><strong>Joined:</strong> {{ user.created_at.strftime('%B %d, %Y') }}</p>
+                    
+                    <div class="mt-3">
+                        <h6>Cloudinary Integration</h6>
+                        {% if user.cloudinary_connected %}
+                            <div class="alert alert-success">
+                                <p><i class="bi bi-cloud-check"></i> Your Cloudinary account is connected.</p>
+                                <p class="mb-0 small">Your quote designs will be saved to your personal cloud storage.</p>
+                            </div>
+                            <a href="{{ url_for('auth.cloudinary_settings') }}" class="btn btn-outline-primary">Update Cloudinary Settings</a>
+                        {% else %}
+                            <div class="alert alert-info">
+                                <p><i class="bi bi-cloud"></i> Connect your Cloudinary account to save designs to your cloud library.</p>
+                                <p class="mb-0 small">Your quotes will be uploaded to your personal cloud storage for permanent access.</p>
+                            </div>
+                            <a href="{{ url_for('auth.cloudinary_settings') }}" class="btn btn-primary">Connect Cloudinary</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5>My Designs</h5>
+                    <a href="{{ url_for('auth.my_designs') }}" class="btn btn-sm btn-outline-secondary">View All</a>
+                </div>
+                <div class="card-body">
+                    {% if designs %}
+                        <div class="row">
+                            {% for design in designs[:6] %}
+                                <div class="col-md-4 mb-3">
+                                    <div class="card">
+                                        <img src="{{ design.cloudinary_url }}" class="card-img-top" alt="Design">
+                                        <div class="card-body p-2">
+                                            <p class="small text-muted mb-0">{{ design.created_at.strftime('%b %d, %Y') }}</p>
+                                            <div class="btn-group btn-group-sm w-100 mt-1">
+                                                <a href="{{ design.cloudinary_url }}" download class="btn btn-outline-primary">Download</a>
+                                                <a href="{{ url_for('main.share_design', design_id=design.design_id) }}" class="btn btn-outline-secondary">Share</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-center py-4">You haven't created any designs yet.</p>
+                        <div class="text-center">
+                            <a href="{{ url_for('main.index') }}" class="btn btn-primary">Create Your First Design</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

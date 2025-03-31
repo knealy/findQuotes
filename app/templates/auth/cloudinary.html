@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Connect Cloudinary Account</h5>
+                </div>
+                <div class="card-body">
+                    {% with messages = get_flashed_messages() %}
+                        {% if messages %}
+                            {% for message in messages %}
+                                <div class="alert alert-danger">{{ message }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+                    
+                    <div class="alert alert-info">
+                        <p><strong>Why connect Cloudinary?</strong></p>
+                        <p>Connecting your Cloudinary account allows you to save your quote designs directly to your own cloud storage for easier access and management. Your quotes will be uploaded to your own Cloudinary account instead of our shared storage.</p>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <h6>How to get Cloudinary credentials:</h6>
+                        <ol>
+                            <li>Sign up for a free Cloudinary account at <a href="https://cloudinary.com/users/register/free" target="_blank">cloudinary.com</a></li>
+                            <li>Go to your Dashboard</li>
+                            <li>Find your Cloud Name, API Key, and API Secret</li>
+                        </ol>
+                    </div>
+                    
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label for="cloud_name" class="form-label">Cloud Name</label>
+                            <input type="text" class="form-control" id="cloud_name" name="cloud_name" 
+                                value="{{ current_user.cloudinary_cloud_name or '' }}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="api_key" class="form-label">API Key</label>
+                            <input type="text" class="form-control" id="api_key" name="api_key" 
+                                value="{{ current_user.cloudinary_api_key or '' }}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="api_secret" class="form-label">API Secret</label>
+                            <input type="password" class="form-control" id="api_secret" name="api_secret" 
+                                value="{{ current_user.cloudinary_api_secret or '' }}" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Save Cloudinary Settings</button>
+                        <a href="{{ url_for('auth.account') }}" class="btn btn-outline-secondary">Cancel</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

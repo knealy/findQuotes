@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="card">
+        <div class="card-header">
+            <h5>My Designs</h5>
+        </div>
+        <div class="card-body">
+            {% if designs %}
+                <div class="row">
+                    {% for design in designs %}
+                        <div class="col-md-3 mb-4">
+                            <div class="card">
+                                <img src="{{ design.cloudinary_url }}" class="card-img-top" alt="Design">
+                                <div class="card-body p-2">
+                                    <p class="small text-muted mb-1">{{ design.created_at.strftime('%b %d, %Y') }}</p>
+                                    <div class="btn-group btn-group-sm w-100">
+                                        <a href="{{ design.cloudinary_url }}" download class="btn btn-outline-primary">Download</a>
+                                        <a href="{{ url_for('main.view_share', design_id=design.design_id) }}" class="btn btn-outline-secondary">Share</a>
+                                        <button class="btn btn-outline-danger delete-design" data-design-id="{{ design.id }}">Delete</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-center py-4">You haven't created any designs yet.</p>
+                <div class="text-center">
+                    <a href="{{ url_for('main.index') }}" class="btn btn-primary">Create Your First Design</a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const deleteButtons = document.querySelectorAll('.delete-design');
+    
+    deleteButtons.forEach(btn => {
+        btn.addEventListener('click', async function() {
+            if (confirm('Are you sure you want to delete this design?')) {
+                const designId = this.dataset.designId;
+                
+                try {
+                    const response = await fetch(`/auth/designs/${designId}/delete`, {
+                        method: 'POST'
+                    });
+                    
+                    if (response.ok) {
+                        // Remove the design card from the UI
+                        this.closest('.col-md-3').remove();
+                    } else {
+                        alert('Failed to delete design');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('An error occurred');
+                }
+            }
+        });
+    });
+});
+</script>
+{% endblock %} 
